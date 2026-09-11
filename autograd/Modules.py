@@ -1,6 +1,4 @@
 import numpy as np
-import pandas as pd 
-import matplotlib.pyplot as plt 
 import random
 from .Value import Value
 
@@ -13,8 +11,33 @@ class Neuron:
         return self.forward(x)
     def forward(self, x):
         #w * x + b
-        print(list(zip(self.w, x)))
-        return 0.0
+        act = sum(wi* xi for wi, xi in zip(self.w, x)) + self.b
+        output = act.tanh()
+        return output
 
+    def parameters(self):
+        return self.w + [self.b]
     
-        
+class Layer:
+    def __init__(self, n_input, n_output):
+        self.neurons = [Neuron(n_inputs=n_input) for _ in range(n_output)]
+    def __call__(self, x):
+        return self.forward(x)
+    def forward(self, x):
+        outs = [n(x) for n in self.neurons]
+        return outs[0] if len(outs) == 1 else outs 
+    def parameters(self):
+        return [p for neuron in self.neurons for p in neuron.parameters()]
+    
+class MLP:
+    def __init__(self, nin, nouts):
+        sz = [nin] + nouts
+        self.layers = [Layer(sz[i], sz[i+1]) for i in range(len(nouts))]
+    def __call__(self, x):
+        return self.forward(x)
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+        return x
+    def parameters(self):
+        return [p for layer in self.layers for p in layer.parameters()]
